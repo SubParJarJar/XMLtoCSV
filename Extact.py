@@ -34,25 +34,56 @@ class AlreadyGotIt:
             logging.debug(f"Element was not found in list {self.scouted_elem_list}")
             return False
 
-    def get_siblings(self, element):
-        if self.siblings_completed:
-            logging.debug(f"Previous siblings were found")
-            self.siblings_list = list()
-            self.siblings_completed = False
-        # Causes recursion to loop.
-        if element in self.siblings_list:
-            logging.info(f"Element found in sibling list {element}")
-            return
-        self.siblings_list.append(element)
-        nxt = element.getnext()
-        prev = element.getprevious()
-        if nxt:
-            self.get_siblings(nxt)
-        elif prev:
-            self.get_siblings(prev)
-        else:
-            self.siblings_completed = True
-            return self.siblings_list
+    def get_siblings(self, element, sib_list=None):
+        # Find and return list of siblings of element
+        if sib_list is None:
+            logging.debug(f"Starting new sibling lookup")
+            sib_list = list()
+            sib_list.append(element)
+        logging.debug(f"Starting try for next siblings")
+        try:
+            logging.debug(f"Try started succesfully")
+            nxt = element.getnext()
+            while True:
+                if nxt is None:
+                    raise TypeError
+                sib_list.append(nxt)
+                nxt = nxt.getnext()
+        except TypeError as e:
+            logging.debug(f"All next siblings found")
+        logging.debug(f"Starting try for next siblings")
+        try:
+            logging.debug(f"Try started succesfully")
+            prev = element.getprevious()
+            while True:
+                if prev is None:
+                    raise TypeError
+                sib_list.append(prev)
+                prev = prev.getnext()
+        except TypeError as e:
+            logging.debug(f"All previous siblings found")
+        finally:
+            logging.debug(f"Returning list of siblings: {sib_list}")
+            return sib_list
+
+
+        # if sib_list is None:
+        #     logging.debug(f"Starting new sibling search")
+        #     sib_list = list()
+        # # Causes recursion to loop.
+        # siblings_list = sib_list
+        # if element in siblings_list:
+        #     logging.debug(f"Element found in sibling list, exiting branch {element}")
+        #     return
+        # siblings_list.append(element)
+        # nxt = element.getnext()
+        # prev = element.getprevious()
+        # if nxt:
+        #     self.get_siblings(nxt, siblings_list)
+        # elif prev:
+        #     self.get_siblings(prev, siblings_list)
+        # else:
+        #     return siblings_list
 
     @staticmethod
     def has_nephew(siblings_list):
@@ -164,6 +195,8 @@ gathering_power.add_elements(1)
 
 
 def perf_func(elem, obj, level=0):
+    logging.debug(f"\n\n\n\n\n")
+
     # func(elem,level)
     # + kunnen we ter efficientie de elementen uit de lijst poppen zodra ze herkend worden?
     #         ++ i.e. siblings zijn toegevoegd aan lijst van verkende elementen, volgende recursive komt bij sibling terecht:
@@ -181,12 +214,11 @@ def perf_func(elem, obj, level=0):
     logging.debug(f"Checking if element is in list")
     logging.debug(f"Parameters: {elem}")
     scouted = obj.check_if_in_list(elem)
-    logging.debug(f"Function returned: {scouted}")
+    logging.debug(f"Check if in list returned: {scouted}")
     if scouted:
         logging.debug(f"Element was found, exiting this part of recursive function")
         return
     logging.debug(f"Element was not scouted, getting element children")
-    logging.debug(f"No parameters passed")
     children = elem.getchildren()
     logging.debug(f"Element returned children: {children}")
     if children:
@@ -249,6 +281,7 @@ def perf_func(elem, obj, level=0):
 
 
 def up_func(root_element, elem, obj, data_element=None):
+    logging.debug(f"\n\n\n\n\n")
     logging.debug(f"Checking if list of data elements is passed for {elem}")
     if data_element is None:
         logging.debug(f"No data element found, setting data element to: {obj.data_elements}")
@@ -295,6 +328,7 @@ def up_func(root_element, elem, obj, data_element=None):
         logging.debug(f"Writing data full element list: {data_element}")
         logging.info(f"Continuing up the ladder {elem}")
         logging.debug(f"Parameters: {root_element, parent, obj, data_element}")
+
         up_func(root_element, parent, obj, data_element=data_element)
 
 
