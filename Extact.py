@@ -117,15 +117,15 @@ class GatheringData:
         logging.info(f"Gathering data complete: {r_list}")
         return r_list
 
-    def write_data_to_file(self):
+    @staticmethod
+    def write_data_to_file(data_elements):
         with open('out.csv', 'a') as f:
-            logging.info(f"Writing to file elements: {self.data_elements}")
-            element = str(self.data_elements)
+            logging.info(f"Writing to file elements: {data_elements}")
+            element = str(data_elements)
+            logging.info(f"Writing elements: {element}")
             f.write(element)
             f.write("\n")
             f.close()
-        logging.info(f"Writing completed, purging data")
-        self.purge_data_elements()
 
     def add_elements(self, tag_val):
         self.data_elements.append(tag_val)
@@ -269,19 +269,32 @@ def up_func(root_element, elem, obj, data_element=None):
         siblings = obj.get_siblings_up(elem)
         logging.debug(f"Siblings search returned: {siblings}")
         logging.debug(f"Searching for data in siblings list")
-
-        obj.find_data(siblings)
-        # TODO: Check if any clean up is happening, it is not needed and is to be handled in the master recursive func.
-        obj.write_data_to_file()
-        # TODO: Remove this, purge has been moved to the master recursive function.
-        obj.purge_path()
+        found_data = obj.find_data(siblings)
+        data_element += found_data
+        logging.debug(f"Writing data full element list: {data_element}")
+        obj.write_data_to_file(data_element)
+        logging.debug(f"Write completed, ending this sequence of recursive function")
         return
         # Send message that all data for single csv line has been gathered to obj.
         # Obj must start function to write data to csv
         # Obj must purge list of data and elements
     else:
+        logging.debug(f"No root found: {parent}, adding element {elem} to path to root")
         obj.add_to_path(elem)
+        logging.debug(f"Element {elem} was added to path to root")
+        logging.debug(f"Current data elements are: {obj.data_elements}")
+        logging.debug(f"Current path to root is: {obj.path_to_root}")
+        # object must search path for siblings with data
+        logging.debug(f"Starting walk up to root, searching for siblings")
+        logging.debug(f"Parameters: {elem}")
+        siblings = obj.get_siblings_up(elem)
+        logging.debug(f"Siblings search returned: {siblings}")
+        logging.debug(f"Searching for data in siblings list")
+        found_data = obj.find_data(siblings)
+        data_element += found_data
+        logging.debug(f"Writing data full element list: {data_element}")
         logging.info(f"Continuing up the ladder {elem}")
+        logging.debug(f"Parameters: {root_element, parent, obj, data_element}")
         up_func(root_element, parent, obj, data_element=data_element)
 
 
