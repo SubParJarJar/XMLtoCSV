@@ -101,7 +101,7 @@ class GatheringData:
     def add_to_data_elements(self, item):
         self.data_elements.append(item)
 
-    def find_data(self):
+    def find_data(self, elem):
         for elem in self.path_to_root:
             siblings = self.get_siblings_up(elem)
             if siblings:
@@ -131,14 +131,21 @@ class GatheringData:
     def get_siblings_up(self, element):
         logging.info(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
+            logging.debug(f"Previous siblings found: {self.siblings_list} purging list")
+            logging.debug(f"Purging list")
             self.siblings_list = list()
             self.siblings_completed = False
         if element in self.siblings_list:
+            logging.debug(f"Element was found in list of scouted siblings, quitting branch")
             return
+        logging.debug(f"Adding element to scouted siblings list: {element}")
         self.siblings_list.append(element)
         nxt = element.getnext()
         prev = element.getprevious()
+        logging.debug(f"Search for next element returned: {nxt}")
+        logging.debug(f"Search for previous element returned: {prev}")
         if nxt:
+            logging.debug(f"Next sibling found, continuing chain.")
             self.get_siblings_up(nxt)
         elif prev:
             self.get_siblings_up(prev)
@@ -203,35 +210,63 @@ def perf_func(elem, obj, level=0):
         logging.debug(f"Checking if {elem} is deepest branch")
         logging.debug(f"Parameters: {generation}")
         deepest_branch = not obj.has_nephew(generation)
+        logging.debug(f"Is element {elem} deemed the deepest branch? {deepest_branch}")
         if deepest_branch:
+            logging.debug(f"Element {elem} has started deepest_branch execution.")
+            logging.debug(f"Adding all siblings to scouted list")
+            logging.debug(f"Parameters: {siblings}")
             obj.add_to_scouted(siblings)
-            obj.check_if_in_list(elem)
-            logging.info(f"Upward climb can start for element {elem}")
+            logging.debug(f"Checking if element has been scouted already, to remove element from list.")
+            logging.debug(f"Parameters: {siblings}")
+            scouted = obj.check_if_in_list(elem)
+            logging.debug(f"Upward climb can start for element {elem}")
             # Find root
+            logging.debug(f"Getting root for starting recursive up function")
             root_elem = elem.getroottree().getroot()
+            logging.debug(f"Root element set: {root_elem}")
             # Start upward climb
+            logging.debug(f"Starting recursive up function")
+            logging.debug(f"Parameters: {root_elem, elem, gathering_power}")
             up_func(root_elem, elem, gathering_power)
+            logging.debug(f"Recursive up function has been completed. Cleaning up gatherer object")
+            logging.debug(f"Purging path: {gathering_power.path_to_root}")
+            gathering_power.purge_path()
+            logging.debug(f"Purging data elements: {gathering_power.purge_data_elements}")
+            gathering_power.purge_data_elements()
+            logging.debug(f"Purging done, exiting this branch of function")
+            return
             # Path to root
             # Gather (tag, text) for siblings with data
         elif not deepest_branch:
+            logging.debug(f"Not deepest branch, exiting this branch of function")
             return
         else:
             logging.info(f"Something weird happened: {elem}")
 
 
-def up_func(root_element, elem, obj):
+def up_func(root_element, elem, obj, data_element=None):
+    logging.debug(f"Checking if list of data elements is passed for {elem}")
+    if data_element is None:
+        logging.debug(f"No data element found, setting data element to: {obj.data_elements}")
+        data_element = obj.data_elements
     logging.debug(f"Element {elem} moving towards root {root_element}")
     logging.debug(f"Searching for parent of element {elem}")
     parent = elem.getparent()
+    logging.debug(f"Function returned {parent}")
     if parent is root_element:
+        logging.debug(f"Root element found: {parent}, adding element {elem} to path to root")
         obj.add_to_path(elem)
-        logging.info(f"Root element: {root_element}")
-        logging.info(f"Highest order found {elem}")
-        logging.info(f"Current data elements are: {obj.data_elements}")
-        logging.info(f"path to root is: {obj.get_path()}")
+        logging.debug(f"Element {elem} was added to path to root")
+        logging.debug(f"Current data elements are: {obj.data_elements}")
+        logging.debug(f"Current path to root is: {obj.path_to_root}")
         # object must search path for siblings with data
-        obj.find_data()
+        logging.debug(f"Starting walk up to root, searching for siblings")
+        logging.debug(f"Parameters: {elem}")
+        siblings = obj.get_siblings_up(elem)
+        obj.find_data(elem)
+        # TODO: Check if any clean up is happening, it is not needed and is to be handled in the master recursive func.
         obj.write_data_to_file()
+        # TODO: Remove this, purge has been moved to the master recursive function.
         obj.purge_path()
         return
         # Send message that all data for single csv line has been gathered to obj.
@@ -240,7 +275,7 @@ def up_func(root_element, elem, obj):
     else:
         obj.add_to_path(elem)
         logging.info(f"Continuing up the ladder {elem}")
-        up_func(root_element, parent, obj)
+        up_func(root_element, parent, obj, data_element=data_element)
 
 
 # def up_func(root_element, elem, obj):
