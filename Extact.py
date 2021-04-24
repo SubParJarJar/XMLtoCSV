@@ -3,8 +3,6 @@ import xml.etree.ElementTree as ET
 
 from lxml import etree
 
-
-
 xml_file = 'try.xml'
 parser = etree.XMLParser(encoding='UTF-8')
 parsed = etree.parse(xml_file, parser=parser)
@@ -21,17 +19,17 @@ class AlreadyGotIt:
         self.scouted_elem_list += elem_list
 
     def check_if_in_list(self, element):
-        print(f"Checking if element: {element} is in list {self.scouted_elem_list}")
+        # print(f"Checking if element: {element} is in list {self.scouted_elem_list}")
         if element in self.scouted_elem_list:
             self.scouted_elem_list.remove(element)
-            print(f"Element was removed from list {self.scouted_elem_list}")
+            # print(f"Element was removed from list {self.scouted_elem_list}")
             return True
         else:
-            print(f"Element was not found in list")
+            # print(f"Element was not found in list")
             return False
 
     def get_siblings(self, element):
-        print(f"Checking if element: {element} has siblings")
+        # print(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
             self.siblings_list = list()
             self.siblings_completed = False
@@ -52,17 +50,17 @@ class AlreadyGotIt:
     def has_nephew(elem_list):
         # if has nephew, not deepest level
         # default siblings have no children
-        print(f"Finding deepest branch in {elem_list}")
+        # print(f"Finding deepest branch in {elem_list}")
         nephew = False
         if elem_list:
-            print(f"List approved: {elem_list}")
+            # print(f"List approved: {elem_list}")
             for elem in elem_list:
                 # if siblings do have children, not deepest level
                 children = elem.getchildren()
-                print(f"Sibling has children: {children}")
+                # print(f"Sibling has children: {children}")
                 if children:
                     nephew = True
-                    print(f"Children found, returning true for not deepest branch: {nephew}")
+                    # print(f"Children found, returning true for not deepest branch: {nephew}")
                     return nephew
                 else:
                     continue
@@ -71,33 +69,53 @@ class AlreadyGotIt:
             # Element has no siblings, so is deepest level
             return True
 
+
 class GatheringData:
     def __init__(self):
         self.data_elements = list()
         self.siblings_list = list()
         self.siblings_completed = False
+        self.path_to_root = list()
+
+    def purge_path(self):
+        self.path_to_root = list()
+
+    def get_path(self):
+        return self.path_to_root
+
+    def add_to_path(self, elem):
+        self.path_to_root.append(elem)
 
     def purge_data_elements(self):
         self.data_elements = list()
 
+    def find_data(self):
+        for elem in self.path_to_root:
+            siblings = self.get_siblings(elem)
+            if siblings:
+                for sib in siblings:
+                    tag = sib.tag
+                    text = sib.text
+                    if text:
+                        duo = (tag, text)
+                        self.add_to_data_elements(duo)
+        print(f"Gathering data complete: {self.data_elements}")
+
     def write_data_to_file(self):
         with open('out.csv', 'a') as f:
-            print(f"Writing to file elements: {self.data_elements}")
-            for element in self.data_elements:
-                print(f"Writing to file element: {element}")
-                element = str(element)
-                f.write(element)
+            # print(f"Writing to file elements: {self.data_elements}")
+            element = str(self.data_elements)
+            f.write(element)
             f.write("\n")
             f.close()
-        print(f"Writing completed, purging data")
+        # print(f"Writing completed, purging data")
         self.purge_data_elements()
-
 
     def add_to_data_elements(self, tag_val):
         self.data_elements.append(tag_val)
 
     def get_siblings(self, element):
-        print(f"Checking if element: {element} has siblings")
+        # print(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
             self.siblings_list = list()
             self.siblings_completed = False
@@ -115,10 +133,9 @@ class GatheringData:
             return self.siblings_list
 
 
-
-
 did_i_get_it = AlreadyGotIt()
 gathering_power = GatheringData()
+
 
 def perf_func(elem, obj, level=0):
     # func(elem,level)
@@ -147,7 +164,7 @@ def perf_func(elem, obj, level=0):
         pass
         # Gather siblings
         siblings = obj.get_siblings(elem)
-        print(f"Siblings gathered: {siblings}")
+        # print(f"Siblings gathered: {siblings}")
         # Start sibling sequence
         # if sibling.children, return 0
         # elif not sibling.children: continue
@@ -156,7 +173,7 @@ def perf_func(elem, obj, level=0):
         if deepest_branch:
             obj.add_to_scouted(siblings)
             obj.check_if_in_list(elem)
-            print(f"Upward climb can start for element {elem}")
+            # print(f"Upward climb can start for element {elem}")
             # Find root
             root_elem = elem.getroottree().getroot()
             # Start upward climb
@@ -169,8 +186,25 @@ def perf_func(elem, obj, level=0):
             print(f"Something weird happened: {elem}")
 
 
-
 def up_func(root_element, elem, obj):
+    parent = elem.getparent()
+    if parent is root_element:
+        obj.add_to_path(elem)
+        # print(f"Root element: {root_element}")
+        # print(f"Highest order found {elem}")
+        print(f"path to root is: {obj.get_path()}")
+        # object must search path for siblings with data
+        obj.find_data()
+        obj.write_data_to_file()
+        obj.purge_path()
+        return
+        # Send message that all data for single csv line has been gathered to obj.
+        # Obj must start function to write data to csv
+        # Obj must purge list of data and elements
+    else:
+        obj.add_to_path(elem)
+        # print(f"Continuing up the ladder {elem}")
+        up_func(root_element, parent, obj)
 
 
 # def up_func(root_element, elem, obj):
