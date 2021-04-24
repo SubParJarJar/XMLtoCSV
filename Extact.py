@@ -101,19 +101,21 @@ class GatheringData:
     def add_to_data_elements(self, item):
         self.data_elements.append(item)
 
-    def find_data(self, elem):
-        for elem in self.path_to_root:
-            siblings = self.get_siblings_up(elem)
-            if siblings:
-                for sib in siblings:
-                    tag = sib.tag
-                    text = sib.text
-                    if text:
-                        duo = (tag, text)
-                        logging.info(f"Siblings found {duo}, adding to data_elements {self.data_elements}")
-                        self.add_to_data_elements(duo)
-                        logging.info(f"Added to data elements{self.data_elements}")
-        logging.info(f"Gathering data complete: {self.data_elements}")
+    def find_data(self, siblings):
+        r_list = list()
+        if siblings:
+            for sib in siblings:
+                logging.debug(f"Searching sibling {sib} for text")
+                tag = sib.tag
+                text = sib.text
+                logging.debug(f"Search resulted in: {tag, text}")
+                if text:
+                    duo = (tag, text)
+                    logging.debug(f"Created duo of data: {duo}")
+                    r_list.append(duo)
+                    logging.info(f"Added to data elements: {r_list}")
+        logging.info(f"Gathering data complete: {r_list}")
+        return r_list
 
     def write_data_to_file(self):
         with open('out.csv', 'a') as f:
@@ -148,8 +150,10 @@ class GatheringData:
             logging.debug(f"Next sibling found, continuing chain.")
             self.get_siblings_up(nxt)
         elif prev:
+            logging.debug(f"Previous sibling found, continuing chain.")
             self.get_siblings_up(prev)
         else:
+            logging.debug(f"Sibling list completed, returning list: {self.siblings_list}")
             self.siblings_completed = True
             return self.siblings_list
 
@@ -263,7 +267,10 @@ def up_func(root_element, elem, obj, data_element=None):
         logging.debug(f"Starting walk up to root, searching for siblings")
         logging.debug(f"Parameters: {elem}")
         siblings = obj.get_siblings_up(elem)
-        obj.find_data(elem)
+        logging.debug(f"Siblings search returned: {siblings}")
+        logging.debug(f"Searching for data in siblings list")
+
+        obj.find_data(siblings)
         # TODO: Check if any clean up is happening, it is not needed and is to be handled in the master recursive func.
         obj.write_data_to_file()
         # TODO: Remove this, purge has been moved to the master recursive function.
