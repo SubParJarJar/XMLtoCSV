@@ -25,21 +25,23 @@ class AlreadyGotIt:
         self.scouted_elem_list += elem_list
 
     def check_if_in_list(self, element):
-        # logging.info(f"Checking if element: {element} is in list {self.scouted_elem_list}")
+        logging.info(f"Checking if element: {element} is in list {self.scouted_elem_list}")
         if element in self.scouted_elem_list:
             self.scouted_elem_list.remove(element)
-            # logging.info(f"Element was removed from list {self.scouted_elem_list}")
+            logging.info(f"Element was removed from list {self.scouted_elem_list}")
             return True
         else:
-            # logging.info(f"Element was not found in list")
+            logging.info(f"Element was not found in list")
             return False
 
     def get_siblings(self, element):
-        # logging.info(f"Checking if element: {element} has siblings")
+        logging.info(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
             self.siblings_list = list()
             self.siblings_completed = False
+        # Causes recursion to loop.
         if element in self.siblings_list:
+            logging.info(f"Element found in sibling list {element}")
             return
         self.siblings_list.append(element)
         nxt = element.getnext()
@@ -53,23 +55,23 @@ class AlreadyGotIt:
             return self.siblings_list
 
     @staticmethod
-    def has_nephew(elem_list):
+    def has_nephew(siblings_list):
         # if has nephew, not deepest level
         # default siblings have no children
-        logging.info(f"Finding deepest branch in {elem_list}")
+        logging.info(f"Finding deepest branch in {siblings_list}")
         nephew = False
-        if elem_list:
-            logging.info(f"List approved: {elem_list}")
-            for elem in elem_list:
+        if siblings_list:
+            logging.info(f"List approved: {siblings_list}")
+            for sib in siblings_list:
                 # if siblings do have children, not deepest level
-                children = elem.getchildren()
-                logging.info(f"Sibling {elem} has children: {children}")
+                children = sib.getchildren()
+                logging.info(f"Sibling {sib} has children: {children}")
                 if children:
                     nephew = True
-                    # logging.info(f"Children found, returning true for not deepest branch: {nephew}")
+                    logging.info(f"Children found, returning true for not deepest branch: {nephew}")
                     return nephew
                 else:
-                    logging.info(f"Sibling {elem} has no children: {children}")
+                    logging.info(f"Sibling {sib} has no children: {children}")
                     continue
             return nephew
         else:
@@ -111,7 +113,7 @@ class GatheringData:
                         logging.info(f"Siblings found {duo}, adding to data_elements {self.data_elements}")
                         self.add_to_data_elements(duo)
                         logging.info(f"Added to data elements{self.data_elements}")
-        # logging.info(f"Gathering data complete: {self.data_elements}")
+        logging.info(f"Gathering data complete: {self.data_elements}")
 
     def write_data_to_file(self):
         with open('out.csv', 'a') as f:
@@ -120,14 +122,14 @@ class GatheringData:
             f.write(element)
             f.write("\n")
             f.close()
-        # logging.info(f"Writing completed, purging data")
+        logging.info(f"Writing completed, purging data")
         self.purge_data_elements()
 
     def add_elements(self, tag_val):
         self.data_elements.append(tag_val)
 
     def get_siblings(self, element):
-        # logging.info(f"Checking if element: {element} has siblings")
+        logging.info(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
             self.siblings_list = list()
             self.siblings_completed = False
@@ -176,8 +178,10 @@ def perf_func(elem, obj, level=0):
     elif not children:
         pass
         # Gather siblings
-        siblings = obj.get_siblings(elem)
-        # logging.info(f"Siblings gathered: {siblings}")
+        generation = obj.get_siblings(elem)
+        siblings = generation.remove(elem)
+        logging.info(f"Generation gathered: {generation}")
+        logging.info(f"Siblings gathered: {siblings}")
         # Start sibling sequence
         # if sibling.children, return 0
         # elif not sibling.children: continue
@@ -186,7 +190,7 @@ def perf_func(elem, obj, level=0):
         if deepest_branch:
             obj.add_to_scouted(siblings)
             obj.check_if_in_list(elem)
-            # logging.info(f"Upward climb can start for element {elem}")
+            logging.info(f"Upward climb can start for element {elem}")
             # Find root
             root_elem = elem.getroottree().getroot()
             # Start upward climb
@@ -203,8 +207,8 @@ def up_func(root_element, elem, obj):
     parent = elem.getparent()
     if parent is root_element:
         obj.add_to_path(elem)
-        # logging.info(f"Root element: {root_element}")
-        # logging.info(f"Highest order found {elem}")
+        logging.info(f"Root element: {root_element}")
+        logging.info(f"Highest order found {elem}")
         logging.info(f"Current data elements are: {obj.data_elements}")
         logging.info(f"path to root is: {obj.get_path()}")
         # object must search path for siblings with data
@@ -217,7 +221,7 @@ def up_func(root_element, elem, obj):
         # Obj must purge list of data and elements
     else:
         obj.add_to_path(elem)
-        # logging.info(f"Continuing up the ladder {elem}")
+        logging.info(f"Continuing up the ladder {elem}")
         up_func(root_element, parent, obj)
 
 
