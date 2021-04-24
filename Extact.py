@@ -25,18 +25,18 @@ class AlreadyGotIt:
         self.scouted_elem_list += elem_list
 
     def check_if_in_list(self, element):
-        logging.info(f"Checking if element: {element} is in list {self.scouted_elem_list}")
         if element in self.scouted_elem_list:
+            logging.debug(f"Element was found in list: {self.scouted_elem_list}")
             self.scouted_elem_list.remove(element)
-            logging.info(f"Element was removed from list {self.scouted_elem_list}")
+            logging.debug(f"Element was removed from list: {self.scouted_elem_list}")
             return True
         else:
-            logging.info(f"Element was not found in list")
+            logging.debug(f"Element was not found in list {self.scouted_elem_list}")
             return False
 
     def get_siblings(self, element):
-        logging.info(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
+            logging.debug(f"Previous siblings were found")
             self.siblings_list = list()
             self.siblings_completed = False
         # Causes recursion to loop.
@@ -128,7 +128,7 @@ class GatheringData:
     def add_elements(self, tag_val):
         self.data_elements.append(tag_val)
 
-    def get_siblings(self, element):
+    def get_siblings_up(self, element):
         logging.info(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
             self.siblings_list = list()
@@ -167,26 +167,40 @@ def perf_func(elem, obj, level=0):
     #                     ++ als branch einde heeft geen siblings, start terugloop.
     #     + hoe zorgen we ervoor dat de csv file de juiste headers in de juist volgorde krijgt?
     #     ++ als terugloopfunctie is gestart, zoek siblings met text, add element.tag en element.text. start parent.
+    logging.debug(f"Checking if element is in list")
+    logging.debug(f"Parameters: {elem}")
     scouted = obj.check_if_in_list(elem)
+    logging.debug(f"Function returned: {scouted}")
     if scouted:
+        logging.debug(f"Element was found, exiting this part of recursive function")
         return
+    logging.debug(f"Element was not scouted, getting element children")
+    logging.debug(f"No parameters passed")
     children = elem.getchildren()
+    logging.debug(f"Element returned children: {children}")
     if children:
+        logging.debug(f"Children were found, looping over list of children and starting new recursive function")
         for child in children:
+            logging.debug(f"Starting new function for child: {child, child.tag}")
+            logging.debug(f"Parameters: {child, obj, level + 1}")
             perf_func(child, obj, level + 1)
+        logging.debug(f"Looping is done for element: {elem}, exiting branch.")
         return
     elif not children:
-        pass
+        logging.debug(f"No children found for element {elem}")
         # Gather siblings
+        logging.debug(f"Searching for siblings of element: {elem}")
+        logging.debug(f"Parameters: {elem}")
         generation = obj.get_siblings(elem)
-        siblings = generation.remove(elem)
         logging.info(f"Generation gathered: {generation}")
-        logging.info(f"Siblings gathered: {siblings}")
+        if generation:
+            siblings = generation.remove(elem)
+            logging.info(f"Siblings gathered: {siblings}")
         # Start sibling sequence
         # if sibling.children, return 0
         # elif not sibling.children: continue
         # outside loop: no children found, deepest level
-        deepest_branch = not obj.has_nephew(siblings)
+        deepest_branch = not obj.has_nephew(generation)
         if deepest_branch:
             obj.add_to_scouted(siblings)
             obj.check_if_in_list(elem)
