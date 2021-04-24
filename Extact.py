@@ -4,11 +4,11 @@ import xml.etree.ElementTree as ET
 from lxml import etree
 
 
-#
-# xml_file = 'try.xml'
-# parser = etree.XMLParser(encoding='UTF-8')
-# parsed = etree.parse(xml_file, parser=parser)
-# root = parsed.getroot()
+
+xml_file = 'try.xml'
+parser = etree.XMLParser(encoding='UTF-8')
+parsed = etree.parse(xml_file, parser=parser)
+root = parsed.getroot()
 
 
 class AlreadyGotIt:
@@ -77,6 +77,25 @@ class GatheringData:
         self.siblings_list = list()
         self.siblings_completed = False
 
+    def purge_data_elements(self):
+        self.data_elements = list()
+
+    def write_data_to_file(self):
+        with open('out.csv', 'a') as f:
+            print(f"Writing to file elements: {self.data_elements}")
+            for element in self.data_elements:
+                print(f"Writing to file element: {element}")
+                element = str(element)
+                f.write(element)
+            f.write("\n")
+            f.close()
+        print(f"Writing completed, purging data")
+        self.purge_data_elements()
+
+
+    def add_to_data_elements(self, tag_val):
+        self.data_elements.append(tag_val)
+
     def get_siblings(self, element):
         print(f"Checking if element: {element} has siblings")
         if self.siblings_completed:
@@ -138,11 +157,50 @@ def perf_func(elem, obj, level=0):
             obj.add_to_scouted(siblings)
             obj.check_if_in_list(elem)
             print(f"Upward climb can start for element {elem}")
+            # Find root
+            root_elem = elem.getroottree().getroot()
             # Start upward climb
+            up_func(root_elem, elem, gathering_power)
+            # Path to root
+            # Gather (tag, text) for siblings with data
         elif not deepest_branch:
             return
         else:
             print(f"Something weird happened: {elem}")
+
+
+
+def up_func(root_element, elem, obj):
+
+
+# def up_func(root_element, elem, obj):
+#     # Get parent of element
+#     parent = elem.getparent()
+#     # Get siblings of element
+#     siblings = obj.get_siblings(elem)
+#     print(f"{elem} siblings found for upwards function {siblings}")
+#     # Get data of siblings
+#     if siblings:
+#         for sib in siblings:
+#             sib_tag = sib.tag
+#             sib_text = sib.text
+#             print(f"Data gathered for sibling: {sib, sib_tag, sib_text}")
+#             if sib_text:
+#                 sib_duo = (sib_tag, sib_text)
+#                 print(f"Text was found for sibling {sib_duo}")
+#                 obj.add_to_data_elements(sib_duo)
+#             else:
+#                 print(f"No text found for {sib}")
+#                 continue
+#     if parent is root_element:
+#         print(f"Highest order found {elem}")
+#         obj.write_data_to_file()
+#         # Send message that all data for single csv line has been gathered to obj.
+#         # Obj must start function to write data to csv
+#         # Obj must purge list of data and elements
+#     else:
+#         print(f"Continuing up the ladder {elem}")
+#         up_func(root_element, parent, obj)
 
 
 xml_file = 'try.xml'
