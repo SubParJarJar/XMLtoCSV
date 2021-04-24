@@ -103,7 +103,7 @@ class GatheringData:
 
     def find_data(self):
         for elem in self.path_to_root:
-            siblings = self.get_siblings(elem)
+            siblings = self.get_siblings_up(elem)
             if siblings:
                 for sib in siblings:
                     tag = sib.tag
@@ -139,9 +139,9 @@ class GatheringData:
         nxt = element.getnext()
         prev = element.getprevious()
         if nxt:
-            self.get_siblings(nxt)
+            self.get_siblings_up(nxt)
         elif prev:
-            self.get_siblings(prev)
+            self.get_siblings_up(prev)
         else:
             self.siblings_completed = True
             return self.siblings_list
@@ -192,14 +192,16 @@ def perf_func(elem, obj, level=0):
         logging.debug(f"Searching for siblings of element: {elem}")
         logging.debug(f"Parameters: {elem}")
         generation = obj.get_siblings(elem)
-        logging.info(f"Generation gathered: {generation}")
+        logging.debug(f"Generation gathered: {generation}")
         if generation:
             siblings = generation.remove(elem)
-            logging.info(f"Siblings gathered: {siblings}")
+            logging.debug(f"Element: {elem} siblings gathered: {siblings}")
         # Start sibling sequence
         # if sibling.children, return 0
         # elif not sibling.children: continue
         # outside loop: no children found, deepest level
+        logging.debug(f"Checking if {elem} is deepest branch")
+        logging.debug(f"Parameters: {generation}")
         deepest_branch = not obj.has_nephew(generation)
         if deepest_branch:
             obj.add_to_scouted(siblings)
@@ -218,6 +220,8 @@ def perf_func(elem, obj, level=0):
 
 
 def up_func(root_element, elem, obj):
+    logging.debug(f"Element {elem} moving towards root {root_element}")
+    logging.debug(f"Searching for parent of element {elem}")
     parent = elem.getparent()
     if parent is root_element:
         obj.add_to_path(elem)
