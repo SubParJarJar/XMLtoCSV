@@ -234,18 +234,15 @@ def perf_func(elem, obj, level=0):
         # Gather siblings
         logging.debug(f"Searching for siblings of element: {elem}")
         logging.debug(f"Parameters: {elem}")
-        generation = obj.get_siblings(elem)
-        logging.debug(f"Generation gathered: {generation}")
-        if generation:
-            siblings = generation.remove(elem)
-            logging.debug(f"Element: {elem} siblings gathered: {siblings}")
+        siblings = obj.get_siblings(elem)
+        logging.debug(f"Generation gathered: {siblings}")
         # Start sibling sequence
         # if sibling.children, return 0
         # elif not sibling.children: continue
         # outside loop: no children found, deepest level
         logging.debug(f"Checking if {elem} is deepest branch")
-        logging.debug(f"Parameters: {generation}")
-        deepest_branch = not obj.has_nephew(generation)
+        logging.debug(f"Parameters: {siblings}")
+        deepest_branch = not obj.has_nephew(siblings)
         logging.debug(f"Is element {elem} deemed the deepest branch? {deepest_branch}")
         if deepest_branch:
             logging.debug(f"Element {elem} has started deepest_branch execution.")
