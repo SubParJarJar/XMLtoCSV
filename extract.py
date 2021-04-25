@@ -18,10 +18,15 @@ import logging
 
 InitLogging.init_logging(log_level=0)
 
-
-
 xml_file = 'try.xml'
 parser = etree.XMLParser(encoding='UTF-8')
 parsed = etree.parse(xml_file, parser=parser)
 root = parsed.getroot()
+root_children = root.getchildren()
+
+
+def unpack_xml (element, children_elements, sibling_data, no_grandchildren=True, write_out=False):
+    pass
+
+
 
