@@ -1,5 +1,3 @@
-import csv
-import xml.etree.ElementTree as ET
 from lxml import etree
 import InitLogging
 import logging
