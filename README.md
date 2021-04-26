@@ -1,6 +1,6 @@
 # XMLtoCSV
 WIP currently working on dynamically creating new headers in streaming mode.
-Recursive xml to csv function
+Recursive xml to csv function:
 
   
 1. Parent searches for data in child (child.text)
