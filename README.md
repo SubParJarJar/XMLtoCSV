@@ -1,5 +1,6 @@
 # XMLtoCSV
-WIP recursive xml to csv function
+WIP currently working on dynamically creating new headers in streaming mode.
+Recursive xml to csv function
 
   
 1. Parent searches for data in child (child.text)
@@ -9,4 +10,3 @@ WIP recursive xml to csv function
   b. Tag: no_grandchildren is set to False.
 3. If no grandchildren, write to file
 4. If grandchildren, restart function for child
-
