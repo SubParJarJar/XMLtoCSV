@@ -189,7 +189,7 @@ class GatheringData:
 
 did_i_get_it = AlreadyGotIt()
 gathering_power = GatheringData()
-gathering_power.add_elements(1)
+gathering_power.add_elements()
 
 
 def perf_func(elem, obj, level=0):
